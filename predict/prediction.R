@@ -17,7 +17,8 @@ load("./models/impute_ad_list.RData")
 ad_data_impute <- reimpute(ad_data, impute_ad_list$desc)
 
 # Load Models
-load("./c50_train_mod.RData")
+
+load("./models/hdrda_train_mod.RData")
 load("./models/c50_train_mod.RData")
 
 c50_predict <- predict(c50_train, newdata = ad_data)

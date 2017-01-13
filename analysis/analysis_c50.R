@@ -14,3 +14,14 @@ for (i in 3:5)
   c50_partDepDat$data[,i] <- as.integer(c50_partDepDat$data[,i])
 plotHyperParsEffect(c50_partDepDat, x="trials" , y = "kappa.test.mean", z = "minCases",
                     partial.dep.learn = "regr.earth", plot.type = "line")
+
+
+hdrda_partDepDat <- generateHyperParsEffectData(tune_mod_hdrda, partial.dep = TRUE)
+
+head(hdrda_partDepDat$data)
+# Because of some internal mlr problems we have to replace b632plus with test.mean
+colnames(hdrda_partDepDat$data)[3] <- "kappa.test.mean"
+hdrda_partDepDat$measures <- "kappa.test.mean"
+plotHyperParsEffect(hdrda_partDepDat, x="gamma" , y = "kappa.test.mean", z = "lambda",
+                    partial.dep.learn = "regr.earth", plot.type = "line")
+
