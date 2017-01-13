@@ -123,7 +123,7 @@ performance(c50_pred, kappa)
 parallelStartSocket(7)
 configureMlr(on.learner.error = "warn")
 tune_mod_hdrda <- tuneParams(learner = hdrda_learner, task = impute_ad_task,
-                       measures = setAggregation(kappa, b632), resampling = bt_sample,
+                       measures = setAggregation(kappa, b632plus), resampling = bt_sample,
                        par.set = hdrda_parset, control = ctrl )
 parallelStop()
 
@@ -139,16 +139,29 @@ save(tune_mod_hdrda, file = "./models/hdrda_tune_mod.RData")
 save(c50_train, file = "./models/c50_train_mod.RData")
 save(tune_mod_c50, file = "./models/c50_tune_mod.RData")
 
+######################################
+## Stack Both Learner For Ensemble  ##
+######################################
+
 stacked_hd_c50 <- makeLearners(c("classif.hdrda", "classif.C50"))
 stacked_hd_c50[[1]] <- setHyperPars(stacked_hd_c50[[1]], par.vals = tune_mod_hdrda$x)
 stacked_hd_c50$classif.hdrda$predict.type = "prob"
 stacked_hd_c50[[2]] <- setHyperPars(stacked_hd_c50[[2]], par.vals = tune_mod_c50$x)
 stacked_hd_c50$classif.C50$predict.type = "prob"
-test_stack <- makeStackedLearner(stacked_hd_c50, method = "hill.climb", predict.type = "prob")
+stack_learner <- makeStackedLearner(stacked_hd_c50, method = "hill.climb", predict.type = "prob")
+
+# Save the stacked learner
+save(stack_learner, file = "./models/stack_learner_tune_mod.RData")
 
 parallelStartSocket(8)
+stack_resample <- resample(stack_learner,
+                           task = impute_ad_task,
+                           measures = setAggregation(kappa, b632plus),
+                           resampling = bt_sample)
+parallelStop()
+parallelStartSocket(8)
 configureMlr(on.learner.error = "warn")
-train_stack <- train(test_stack, impute_ad_task)
+train_stack <- train(stack_learner, impute_ad_task)
 parallelStop()
 
 stack_pred <- predict(train_stack, newdata = test_ad_data_impute)

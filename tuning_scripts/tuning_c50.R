@@ -96,7 +96,7 @@ bt_sample <- makeResampleDesc(method = "Bootstrap", iters = 10, predict = "both"
 ############################################
 
 # Tune C50 model
-parallelStartSocket(7)
+parallelStartSocket(8)
 configureMlr(on.learner.error = "warn")
 tune_mod_c50 <- tuneParams(learner = c50_learner, task = impute_ad_task,
                            measures = setAggregation(kappa, b632plus), resampling = bt_sample,

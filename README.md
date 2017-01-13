@@ -36,19 +36,21 @@ Please send us the following:
 
 ## Folder Description
 
-The files and folders in this repository contain the code and associated files to predict whether an image is an ad based on its underlying properties. In each folder are:
+The files and folders in this repository contain the code and associated files to predict whether an image is an ad based on its underlying properties. Below are the descriptions for each folder:
 
 1. data
- - The data and meta data for advertisements
+ - The data and meta data for images
 2. tuning_scripts
  - The code to tune the models
  - tuning_missing: contains the code to build the model which imputes missing data. Because of time constraints a model was built to impute height, and because width and aratio are most likely strongly correlated with height the tuned parameters from the ctree model used to predict height were also used to build the width and aratio models. the local variable was a binary variable and, due to time constraints, a histogram imputation strategy is used to calculate random values to impute into local.
  - tuning_ads: contains the code to impute and tune the C5.0 and hdrda models
  - tuning_c50: contains code to tune a C5.0 model that also tunes the threshold for the hard prediction of ad vs. nonad. Due to time constraints this was not run, but is given to show how a better model could be built.
+ - build_final_models: The final models trained over all of the data. Outputs *_final_mod.RData, the final models.
 3. models
  - The final models created from the tuning and training routine as well as the tuning objects and imputation objects.
- - *_train_mod: the final tuned model for either C5.0 or hdrdr
+ - *_train_mod: the final tuned model for either C5.0, hdrdr, and the stack of both
  - *_tune_mod: the tuning object returned from mlr. This is mostly used to analyze how the model reacted to new hyperparameters. height_tune is used to build the imputation models in tuning_ads and tuning_c50
+ - *_final_mod: The final models tuned over the entire dataset
  - impute_ad_list: The impute object used to reimpute over new data for prediction
 3. img
  - Contains pictures that analyze the respective tuning object hyperparameters
@@ -95,7 +97,9 @@ The first route has the draw back that our model will be unable to make predicti
 An imputation method is used on the data for the variables `height`, `width`, `aratio`, and `local` which creates a new task labeled `impute_ad_task`. A Conditional Inference Tree model is used to develop imputations for the continuous variables with missing data as it is a simple model that is known to produce quick and reasonable results. More information on the inner workings of `ctree` can be found in the details of the help file [`?party::ctree()`] Model development for the imputation technique can be viewed in the file marked `tuning_missing` in the folder `tuning_scripts`.
 
 
-The `mlr` package's `impute()` function has a reproducible benefit, in that imputation can be easily performed on testing data by simply calling `reimpute()` [line 40]. For our purposes, 100 observations were randomly chosen to be the final holdout data that our models will be assessed on at the end of the tuning procedure.
+The `mlr` package's `impute()` function has a reproducible benefit in that imputation can be easily performed on testing data by simply calling `reimpute()` [line 40]. For our purposes, 100 observations were randomly chosen to be the final holdout data that our models will be assessed on at the end of the tuning procedure. It should be noted that this method is rather ad-hoc. The models performance during the resampling strategy (training) should be emphasized more as it is more rigorous than a simple holdout set. 
+
+Once we train the imputation model and use it on the original `ad_task` we receive back the `impute_ad_task`.
 
 ```r
 impute_ad_task
@@ -130,13 +134,13 @@ After each model is tuned seperately both models are combined into an ensemble u
 
 ## Results
 
-Both models were tuned with [b632+](http://stats.stackexchange.com/questions/96739/what-is-the-632-rule-in-bootstrapping) for 10 iterations with an objective to maximize [Cohen's Kappa](https://en.wikipedia.org/wiki/Cohen's_kappa) where the best model would have a score of one. Iterated [F-Racing](http://iridia.ulb.ac.be/irace/) with a maximum number experiments equal to 250 is used to search the hyperparameter space. The below table gives results for the tuning and holdout set kappa scores of both models.
+Both models were tuned with [b632+](http://stats.stackexchange.com/questions/96739/what-is-the-632-rule-in-bootstrapping) for 10 iterations for each model instance with an objective to maximize [Cohen's Kappa](https://en.wikipedia.org/wiki/Cohen's_kappa) where the best model would have a score of one. Iterated [F-Racing](http://iridia.ulb.ac.be/irace/) with a maximum number experiments equal to 250 is used to search the hyperparameter space. The below table gives results for the tuning and holdout set kappa scores of both models.
 
 | Model         | Train          | Test     |
 | ------------- |:-------------:| ---------:|
 | C5.0          | 0.918         | 0.9005305 |
 | hdrdra        | 0.912         | 0.9681529 |
-| Ensemble      | NA            | 1         |
+| Ensemble      | 0.923         | 1         |
 
 
 The final models selected were.
@@ -157,11 +161,19 @@ tune_mod_hdrda
 # kappa.b632=0.912
 ```
 
+```r
+stack_resample
+# Resample Result
+# Task: Hedgeable Ad Identification
+# Learner: stack
+# Aggr perf: kappa.b632plus=0.923
+```
+
 where the Ensemble model was created using both optimal models combined with a hill climbing algorithm.
 
 ### Analysis of Models
 
-hdrda has only two parameters to tune, gamma and lambda. Below is the dependency plot of gamma and lambda, with the x axis being gamma, y being within tuning kappa, and the color of the line graph being lambda. It is clear the value of gamma had a much stronger effect on the model's end kappa score, with kappa increasing as lambda increased.
+hdrda has only two parameters to tune, gamma and lambda. Below is the dependency plot of gamma and lambda, with the x axis being gamma, y being within tuning kappa, and the color of the line graph being lambda. It is clear the value of gamma had a much stronger effect on the model's end kappa score. While lambda had a much smaller effect, its very clear that increasing lambda lead to an increase in kappa.
 
 ![](./img/gamma_vs_lambda.png)
 
@@ -170,7 +182,7 @@ The images below contain the dependency graphs for some of the tuning parameters
 ![](./img/trials_vs_minCases.png)
 
 
-The graphic below shows the number of trials and whether the model allowed winnowing, where winnowing the C5.0 model's process of filtering out what it deems to be useless features. We can see in the graphic that the best models actually had no winnowing, meaning that while some variables are usually not used, at some points they may be useful.
+The graphic below shows the number of trials and whether the model allowed winnowing, where winnowing is the C5.0 model's process of filtering out what it deems to be useless features. We can see in the graphic that the best models actually had no winnowing, meaning that while some variables are usually not used, at some points they may be useful.
 
 ![](./img/trials_vs_winnow.png)
 
@@ -178,19 +190,13 @@ The graphic below shows the number of trials and whether the model allowed winno
 
 To predict with new data, use the script located in the predict folder. The only part of the file that should need to be changed is the name of the data in the `fread()` function.
 
-The prediction script will run predictions for C5.0, hdrda, and the ensemble of C5.0 and hdrda. It should be noted that while the ensemble of both models received a perfect score, the ensemble was created post-hoc, meaning we do not have a kappa score from tuning. My final recommendation is based on your risk preference. With more tuning and analysis I would feel very comfortable saying the ensemble is the obvious choice. However, I believe the models from least to most risky are
-
-1. C5.0
-2. Ensemble
-3. hdrda
-
-and as such would recommend the ensemble as it gives the best holdout score and is created from two well tested models. Though we do not have a tuning kappa score, it's submodels performed well and are unique to one another. As such the ensemble of both models is most likely to perform better.
+The prediction script will run predictions for C5.0, hdrda, and the ensemble of C5.0 and hdrda. My final recommendation is to use the ensemble of both models. While the testing score was only slightly above both models, it is likely to be more robust. The ensemble gives the best holdout score and is created from two well tested models. The submodels each perform well and are unique to one another. As such the ensemble of both models is most likely to perform better.
 
 ## Future
 
 An upgrade that would be simple with more time would be to impliment a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width, and aratio. With more time we would be able to build models which would give us a more accurate imputation, providing better data for C5.0 and hdrda.
 
-While the ensemble performs well, it would be better if the models were tuned simultaneously as an ensemble. Tuning over the cross-product of each models hyperparameters would allow the tuning process to find the set of hyperparameters for each model that fit together the best. This would also give us a within tuning kappa score which would be a better indicator of the ensemble models performance relative to a simple holdout set. Due to time this was not possible, but would be simple to impliment in mlr.
+While the ensemble performs well, it would be better if the models were tuned simultaneously as an ensemble. Tuning over the cross-product of each models hyperparameters would allow the tuning process to find the set of hyperparameters for each model that fit together the best. Due to time this was not possible, but would be simple to impliment in mlr.
 
 Finally, the 250 experiments that are used to run the iterated F-racing is a minimun number. 400 to 700 experiments would allow the optimization process to search a much wider space and find better model hyperparameters.
 

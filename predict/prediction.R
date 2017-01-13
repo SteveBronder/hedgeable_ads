@@ -2,7 +2,7 @@
 
 # Read in the new data and set the names by the meta data
 ################# _NEW Data Goes Here_ #################
-ad_data <- fread("./data/data", header = FALSE,na.strings = "?")
+ad_data <- fread("./data/data", header = FALSE, na.strings = "?")
 ########################################################
 meta_data <- fread("./data/column_names.txt", sep = ":", header = FALSE, blank.lines.skip = TRUE)
 
@@ -18,9 +18,9 @@ ad_data_impute <- reimpute(ad_data, impute_ad_list$desc)
 
 # Load Models
 
-load("./models/hdrda_train_mod.RData")
-load("./models/c50_train_mod.RData")
-load("./models/stacked_hdrda_c50_train_mod.RData")
+load("./models/hdrda_final_mod.RData")
+load("./models/c50_final_mod.RData")
+load("./models/stack_final_mod.RData")
 
 c50_predict <- predict(c50_train, newdata = ad_data)
 hdrda_predict <- predict(c50_train, newdata = ad_data)
