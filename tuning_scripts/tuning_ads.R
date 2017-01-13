@@ -139,11 +139,19 @@ save(tune_mod_hdrda, file = "./models/hdrda_tune_mod.RData")
 save(c50_train, file = "./models/c50_train_mod.RData")
 save(tune_mod_c50, file = "./models/c50_tune_mod.RData")
 
-test_stackLearn <- makeLearners(c("classif.hdrda", "classif.C50"))
-test_stackLearn[[1]] <- setHyperPars(test_stackLearn[[1]], par.vals = tune_mod_hdrda$x)
-test_stackLearn$classif.hdrda$predict.type = "prob"
-test_stackLearn[[2]] <- setHyperPars(test_stackLearn[[2]], par.vals = tune_mod_c50$x)
-test_stackLearn$classif.C50$predict.type = "prob"
-test_stack <- makeStackedLearner(test_stackLearn, method = "hill.climb", predict.type = "prob")
+stacked_hd_c50 <- makeLearners(c("classif.hdrda", "classif.C50"))
+stacked_hd_c50[[1]] <- setHyperPars(stacked_hd_c50[[1]], par.vals = tune_mod_hdrda$x)
+stacked_hd_c50$classif.hdrda$predict.type = "prob"
+stacked_hd_c50[[2]] <- setHyperPars(stacked_hd_c50[[2]], par.vals = tune_mod_c50$x)
+stacked_hd_c50$classif.C50$predict.type = "prob"
+test_stack <- makeStackedLearner(stacked_hd_c50, method = "hill.climb", predict.type = "prob")
 
+parallelStartSocket(8)
+configureMlr(on.learner.error = "warn")
 train_stack <- train(test_stack, impute_ad_task)
+parallelStop()
+
+stack_pred <- predict(train_stack, newdata = test_ad_data_impute)
+performance(stack_pred, kappa)
+
+save(train_stack, file = "./models/stacked_hdrda_c50_train_mod.RData")

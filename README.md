@@ -125,6 +125,8 @@ Two models were tuned over the imputed data.
   - A tree/rule based model whose branching procedure is based on the split which maximizes the information gain. This model has a [boosting](https://en.wikipedia.org/wiki/Boosting_(machine_learning)) procedure which stacks previous trees on top of one another.
 2. hdrda ([paper](https://arxiv.org/pdf/1602.01182v1.pdf))
   - High Dimensional Regularized Discriminant Analysis. Good for small sample high dimensional settings.
+  
+After each model is tuned seperately both models are combined into an ensemble using a [hill climbing](https://en.wikipedia.org/wiki/Hill_climbing) algorithm.
 
 ## Results
 
@@ -134,6 +136,7 @@ Both models were tuned with [b632+](http://stats.stackexchange.com/questions/967
 | ------------- |:-------------:| ---------:|
 | C5.0          | 0.918         | 0.9005305 |
 | hdrdra        | 0.912         | 0.9681529 |
+| Ensemble      | NA            | 1         |
 
 
 The final models selected were.
@@ -154,6 +157,8 @@ tune_mod_hdrda
 # kappa.b632=0.912
 ```
 
+where the Ensemble model was created using both optimal models combined with a hill climbing algorithm.
+
 ### Analysis of Models
 
 hdrda has only two parameters to tune, gamma and lambda. Below is the dependency plot of gamma and lambda, with the x axis being gamma, y being within tuning kappa, and the color of the line graph being lambda. It is clear the value of gamma had a much stronger effect on the model's end kappa score, with kappa increasing as lambda increased.
@@ -173,13 +178,19 @@ The graphic below shows the number of trials and whether the model allowed winno
 
 To predict with new data, use the script located in the predict folder. The only part of the file that should need to be changed is the name of the data in the `fread()` function.
 
-While hdrda outperformed C5.0 on the test data, my final recommendation is to use C5.0 as it tends to perform more consistently on out of sample data. 
+The prediction script will run predictions for C5.0, hdrda, and the ensemble of C5.0 and hdrda. It should be noted that while the ensemble of both models received a perfect score, the ensemble was created post-hoc, meaning we do not have a kappa score from tuning. My final recommendation is based on your risk preference. With more tuning and analysis I would feel very comfortable saying the ensemble is the obvious choice. However, I believe the models from least to most risky are
+
+1. C5.0
+2. Ensemble
+3. hdrda
+
+and as such would recommend the ensemble as it gives the best holdout score and is created from two well tested models. Though we do not have a tuning kappa score, it's submodels performed well and are unique to one another. As such the ensemble of both models is most likely to perform better.
 
 ## Future
 
-Future iterations of this model could use [ensembles](https://rdrr.io/cran/mlr/man/makeStackedLearner.html) of several models, which would most likely outperform either of the individual models created here. While this is very feasible in mlr, due to time constraints and a long tuning time for the ensembled model this was not feasible for this project.
+An upgrade that would be simple with more time would be to impliment a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width, and aratio. With more time we would be able to build models which would give us a more accurate imputation, providing better data for C5.0 and hdrda.
 
-Another upgrade that would be simple with more time would be to impliment a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width, and aratio. With more time we would be able to build models which would give us a more accurate imputation, providing better data for C5.0 and hdrda.
+While the ensemble performs well, it would be better if the models were tuned simultaneously as an ensemble. Tuning over the cross-product of each models hyperparameters would allow the tuning process to find the set of hyperparameters for each model that fit together the best. This would also give us a within tuning kappa score which would be a better indicator of the ensemble models performance relative to a simple holdout set. Due to time this was not possible, but would be simple to impliment in mlr.
 
 Finally, the 250 experiments that are used to run the iterated F-racing is a minimun number. 400 to 700 experiments would allow the optimization process to search a much wider space and find better model hyperparameters.
 
