@@ -45,7 +45,7 @@ The files and folders in this repository contain the code and associated files t
  - tuning_missing: contains the code to build the model which imputes missing data. Because of time constraints a model was built to impute height, and because width and aratio are most likely strongly correlated with height the tuned parameters from the ctree model used to predict height were also used to build the width and aratio models. the local variable was a binary variable and, due to time constraints, a histogram imputation strategy is used to calculate random values to impute into local.
  - tuning_ads: contains the code to impute and tune the C5.0 and hdrda models
  - tuning_c50: contains code to tune a C5.0 model that also tunes the threshold for the hard prediction of ad vs. nonad. Due to time constraints this was not run, but is given to show how a better model could be built.
-2. models
+3. models
  - The final models created from the tuning and training routine as well as the tuning objects and imputation objects.
  - *_train_mod: the final tuned model for the given task
  - *_tune_mod: the tuning object returned from mlr. This is mostly used to analyze how the model reacted to new hyperparameters. height_tune is used to build the imputation models in tuning_ads and tuning_c50
@@ -121,10 +121,9 @@ Notice also that the data has a class imbalance, with 442 advertisements and 273
 Two models were tuned over the imputed data.
 
 1. C5.0 ([wiki](https://en.wikipedia.org/wiki/C4.5_algorithm))
-- A tree/rule based model whose branching procedure is based on the split which maximizes the information gain. This model has a [boosting](https://en.wikipedia.org/wiki/Boosting_(machine_learning)) procedure which stacks previous trees on top of one another.
-
+  - A tree/rule based model whose branching procedure is based on the split which maximizes the information gain. This model has a [boosting](https://en.wikipedia.org/wiki/Boosting_(machine_learning)) procedure which stacks previous trees on top of one another.
 2. hdrda ([paper](https://arxiv.org/pdf/1602.01182v1.pdf))
-- High Dimensional Regularized Discriminant Analysis. Good for small sample high dimensional settings.
+  - High Dimensional Regularized Discriminant Analysis. Good for small sample high dimensional settings.
 
 ## Results
 
