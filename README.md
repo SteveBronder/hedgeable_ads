@@ -50,7 +50,7 @@ The files and folders in this repository contain the code and associated files t
  - The final models created from the tuning and training routine as well as the tuning objects and imputation objects.
  - *_train_mod: the final tuned model for either C5.0, hdrdr, and the stack of both
  - *_tune_mod: the tuning object returned from mlr. This is mostly used to analyze how the model reacted to new hyperparameters. height_tune is used to build the imputation models in tuning_ads and tuning_c50
- - *_final_mod: The final models tuned over the entire dataset
+ - *_final_mod: The final models tuned over the entire dataset. These are used in the prediction script predict for new data.
  - impute_ad_list: The impute object used to reimpute over new data for prediction
 3. img
  - Contains pictures that analyze the respective tuning object hyperparameters
@@ -130,13 +130,13 @@ Two models were tuned over the imputed data.
 2. hdrda ([paper](https://arxiv.org/pdf/1602.01182v1.pdf))
   - High Dimensional Regularized Discriminant Analysis. Good for small sample high dimensional settings.
   
-After each model is tuned seperately both models are combined into an ensemble using a [hill climbing](https://en.wikipedia.org/wiki/Hill_climbing) algorithm.
+After each model is tuned separately both models are combined into an ensemble using a [hill climbing](https://en.wikipedia.org/wiki/Hill_climbing) algorithm.
 
 ## Results
 
 Both models were tuned with [b632+](http://stats.stackexchange.com/questions/96739/what-is-the-632-rule-in-bootstrapping) for 10 iterations for each model instance with an objective to maximize [Cohen's Kappa](https://en.wikipedia.org/wiki/Cohen's_kappa) where the best model would have a score of one. Iterated [F-Racing](http://iridia.ulb.ac.be/irace/) with a maximum number experiments equal to 250 is used to search the hyperparameter space. The below table gives results for the tuning and holdout set kappa scores of both models.
 
-| Model         | Train          | Test     |
+| Model         | Train (tuning)         | Test (holdout)    |
 | ------------- |:-------------:| ---------:|
 | C5.0          | 0.918         | 0.9005305 |
 | hdrdra        | 0.912         | 0.9681529 |
@@ -190,13 +190,13 @@ The graphic below shows the number of trials and whether the model allowed winno
 
 To predict with new data, use the script located in the predict folder. The only part of the file that should need to be changed is the name of the data in the `fread()` function.
 
-The prediction script will run predictions for C5.0, hdrda, and the ensemble of C5.0 and hdrda. My final recommendation is to use the ensemble of both models. While the testing score was only slightly above both models, it is likely to be more robust. The ensemble gives the best holdout score and is created from two well tested models. The submodels each perform well and are unique to one another. As such the ensemble of both models is most likely to perform better.
+The prediction script will run predictions for C5.0, hdrda, and the ensemble of C5.0 and hdrda. My final recommendation is to use the ensemble of both models. While the testing score was only slightly above both models, it is likely to be more robust. The ensemble gives the best holdout score, is created from two well tested models, and both models using different techniques, meaning they are most likely unique to one another and when ensembled will give the final model more information. As such, the ensemble of both models is most likely to perform better.
 
 ## Future
 
-An upgrade that would be simple with more time would be to impliment a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width, and aratio. With more time we would be able to build models which would give us a more accurate imputation, providing better data for C5.0 and hdrda.
+An upgrade that would be simple with more time would be to implement a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width and aratio. With more time we would be able to build models which would give us a more accurate imputation, providing better data for C5.0 and hdrda.
 
-While the ensemble performs well, it would be better if the models were tuned simultaneously as an ensemble. Tuning over the cross-product of each models hyperparameters would allow the tuning process to find the set of hyperparameters for each model that fit together the best. Due to time this was not possible, but would be simple to impliment in mlr.
+While the ensemble performs well, it would be better if the models were tuned simultaneously as an ensemble. Tuning over the cross-product of each models hyperparameters would allow the tuning process to find the set of hyperparameters for each model that fit together the best. Due to time this was not possible, but would be simple to implement in mlr.
 
-Finally, the 250 experiments that are used to run the iterated F-racing is a minimun number. 400 to 700 experiments would allow the optimization process to search a much wider space and find better model hyperparameters.
+Finally, the 250 experiments that are used to run the iterated F-racing is a minimum number. 400 to 700 experiments would allow the optimization process to search a much wider space and find better model hyperparameters.
 
