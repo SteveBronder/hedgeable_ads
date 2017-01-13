@@ -171,7 +171,7 @@ The graphic below shows the number of trials and whether the model allowed winno
 
 ## Prediction
 
-To predict with new data, used the script located in the predict folder. The only part of the file that should need to be changed is the name of the data in the `fread()` function.
+To predict with new data, use the script located in the predict folder. The only part of the file that should need to be changed is the name of the data in the `fread()` function.
 
 While hdrda outperformed C5.0 on the test data, my final recommendation is to use C5.0 as it tends to perform more consistently on out of sample data. 
 
@@ -179,7 +179,7 @@ While hdrda outperformed C5.0 on the test data, my final recommendation is to us
 
 Future iterations of this model could use [ensembles](https://rdrr.io/cran/mlr/man/makeStackedLearner.html) of several models, which would most likely outperform either of the individual models created here. While this is very feasible in mlr, due to time constraints and a long tuning time for the ensembled model this was not feasible for this project.
 
-Another upgrade that would be simple with more time would be to impliment a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width, and aratio. With more time we would be able to build models which would give us more accurate imputation, providing better data for C5.0 and hdrda.
+Another upgrade that would be simple with more time would be to impliment a better model for the imputation. Currently we are only using the tuning parameters when targeting height to train the models to predict width, and aratio. With more time we would be able to build models which would give us a more accurate imputation, providing better data for C5.0 and hdrda.
 
-Finally, the 250 experiments that were used to run the iterated F-racing is a minimun number. 400 to 700 experiments would allow the optimization process to search a much wider space and give better model results.
+Finally, the 250 experiments that are used to run the iterated F-racing is a minimun number. 400 to 700 experiments would allow the optimization process to search a much wider space and find better model hyperparameters.
 
