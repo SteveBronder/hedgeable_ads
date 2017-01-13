@@ -43,12 +43,12 @@ The files and folders in this repository contain the code and associated files t
 2. tuning_scripts
  - The code to tune the data
    - tuning_missing: contains the code to build the model which imputes missing data. Because of time constraints a model was built to impute height, and because width and aratio are most likely strongly correlated with height the tuned parameters from the ctree model used to predict height were also used to build the width and aratio models. the local variable was a binary variable and, due to time constraints, a histogram imputation strategy is used to calculate random values to impute into local.
-   - tuning_ads: contains the code to impute and tune the C5.0 and hdrda models
-   - tuning_c50: contains code to tune a C5.0 model that also tunes the threshold for the hard prediction of ad vs. nonad. Due to time constraints this was not run, but is given to show how a better model could be built.
+  - tuning_ads: contains the code to impute and tune the C5.0 and hdrda models
+  - tuning_c50: contains code to tune a C5.0 model that also tunes the threshold for the hard prediction of ad vs. nonad. Due to time constraints this was not run, but is given to show how a better model could be built.
 2. models
  - The final models created from the tuning and training routine as well as the tuning objects and imputation objects.
-   - **_train_mod: the final tuned model for the given task
-   - **_tune_mod: the tuning object returned from mlr. This is mostly used to analyze how the model reacted to new hyperparameters. height_tune is used to build the imputation models in tuning_ads and tuning_c50
+ - *_train_mod: the final tuned model for the given task
+ - *_tune_mod: the tuning object returned from mlr. This is mostly used to analyze how the model reacted to new hyperparameters. height_tune is used to build the imputation models in tuning_ads and tuning_c50
 3. img
  - Contains pictures that analyze the respective tuning object hyperparameters
 4. analysis
